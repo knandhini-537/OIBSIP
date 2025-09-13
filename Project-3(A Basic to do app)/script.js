@@ -1,106 +1,121 @@
-window.onload = () => {
-  loadTasks();
-};
+function getTasks() {
+  return JSON.parse(localStorage.getItem("tasks")) || [];
+}
+
+function saveTasks(tasks) {
+  localStorage.setItem("tasks", JSON.stringify(tasks));
+}
 
 function addTask() {
-  const input = document.getElementById("taskInput");
-  const taskText = input.value.trim();
+  let input = document.getElementById("taskInput");
+  let taskText = input.value.trim();
 
   if (taskText === "") {
-    alert("Please enter a task!");
+    alert("Task cannot be empty!");
     return;
   }
 
-  const dateAdded = new Date().toLocaleDateString();
-
-  const task = {
+  let tasks = getTasks();
+  tasks.push({
     text: taskText,
-    date: dateAdded,
-    completed: false
-  };
-
-  saveTask(task);
-  renderTasksByDate(); 
-  input.value = "";
-}
-function renderTasksByDate() {
-  const taskContainer = document.getElementById("taskList");
-  taskContainer.innerHTML = ""; 
-const tasks = JSON.parse(localStorage.getItem("tasks")) || [];
-  const grouped = {};
-  tasks.forEach(task => {
-    if (!grouped[task.date]) grouped[task.date] = [];
-    grouped[task.date].push(task);
+    completed: false,
+    date: new Date().toLocaleDateString()
   });
 
-  for (const date in grouped) {
-    const groupDiv = document.createElement("div");
-    groupDiv.className = "date-group";
-
-    const title = document.createElement("div");
-    title.className = "date-title";
-    title.textContent = "📅 " + date;
-    groupDiv.appendChild(title);
-
-    const ul = document.createElement("ul");
-
-    grouped[date].forEach(task => {
-      const li = document.createElement("li");
-
-      const taskText = document.createElement("span");
-      taskText.className = "task-text";
-      taskText.textContent = task.text;
-
-      if (task.completed) {
-        li.classList.add("completed");
-      }
-
-      taskText.addEventListener("click", () => {
-        li.classList.toggle("completed");
-        task.completed = !task.completed;
-        updateTaskInStorage(task);
-      });
-
-      const deleteBtn = document.createElement("button");
-      deleteBtn.textContent = "X";
-      deleteBtn.className = "delete-btn";
-      deleteBtn.onclick = () => {
-        li.remove();
-        deleteTaskFromStorage(task.text, task.date);
-        renderTasksByDate();
-      };
-
-      li.appendChild(taskText);
-      li.appendChild(deleteBtn);
-      ul.appendChild(li);
-    });
-
-    groupDiv.appendChild(ul);
-    taskContainer.appendChild(groupDiv);
-  }
+  saveTasks(tasks);
+  input.value = "";
+  loadTasks();
 }
 
-function saveTask(task) {
-  const tasks = JSON.parse(localStorage.getItem("tasks")) || [];
-  tasks.push(task);
-  localStorage.setItem("tasks", JSON.stringify(tasks));
+function markAsComplete(index) {
+  let tasks = getTasks();
+  tasks[index].completed = true;
+  tasks[index].date=new Date().toLocaleDateString();
+  saveTasks(tasks);
+  loadTasks();
+}
+
+function deleteTask(index) {
+  let tasks = getTasks();
+  tasks.splice(index, 1);
+  saveTasks(tasks);
+  loadTasks();
 }
 
 function loadTasks() {
-  renderTasksByDate();
-}
-function updateTaskInStorage(updatedTask) {
-  let tasks = JSON.parse(localStorage.getItem("tasks")) || [];
-  tasks = tasks.map(task =>
-    task.text === updatedTask.text && task.date === updatedTask.date
-      ? updatedTask
-      : task
-  );
-  localStorage.setItem("tasks", JSON.stringify(tasks));
+  let taskList = document.getElementById("taskList");
+  taskList.innerHTML = "";
+
+  let tasks = getTasks();
+  let groupedTasks = {};
+  tasks.forEach((task, index) => {
+    if (!groupedTasks[task.date]) {
+      groupedTasks[task.date] = [];
+    }
+    groupedTasks[task.date].push({ ...task, index });
+  });
+
+  Object.keys(groupedTasks).forEach(date => {
+    let groupDiv = document.createElement("div");
+    groupDiv.className = "date-group";
+    let heading = document.createElement("h3");
+    heading.textContent = date;
+    groupDiv.appendChild(heading);
+
+    let columnsDiv = document.createElement("div");
+    columnsDiv.className = "task-columns";
+    let pendingColumn = document.createElement("div");
+    pendingColumn.className = "task-column";
+    let pendingTitle = document.createElement("h4");
+    pendingTitle.textContent = "Pending Tasks";
+    pendingColumn.appendChild(pendingTitle);
+    let pendingList = document.createElement("ul");
+    pendingColumn.appendChild(pendingList);
+    let completedColumn = document.createElement("div");
+    completedColumn.className = "task-column";
+    let completedTitle = document.createElement("h4");
+    completedTitle.textContent = "Completed Tasks";
+    completedColumn.appendChild(completedTitle);
+    let completedList = document.createElement("ul");
+    completedColumn.appendChild(completedList);
+
+    groupedTasks[date].forEach(taskObj => {
+      let li = document.createElement("li");
+
+      let taskSpan = document.createElement("span");
+      taskSpan.className = "task-text";
+      taskSpan.textContent = taskObj.text;
+      let actionsDiv = document.createElement("div");
+      actionsDiv.className = "task-actions";
+
+      if (!taskObj.completed) {
+        let completeBtn = document.createElement("button");
+        completeBtn.textContent = "Complete";
+        completeBtn.className = "complete";
+        completeBtn.onclick = () => markAsComplete(taskObj.index);
+        actionsDiv.appendChild(completeBtn);
+      }
+      let deleteBtn = document.createElement("button");
+      deleteBtn.textContent = "Delete";
+      deleteBtn.className = "delete";
+      deleteBtn.onclick = () => deleteTask(taskObj.index);
+      actionsDiv.appendChild(deleteBtn);
+      li.appendChild(taskSpan);
+      li.appendChild(actionsDiv);
+      if (taskObj.completed) {
+        li.classList.add("completed", "fade-in");
+        completedList.appendChild(li);
+      } else {
+        pendingList.appendChild(li);
+      }
+    });
+
+    columnsDiv.appendChild(pendingColumn);
+    columnsDiv.appendChild(completedColumn);
+    groupDiv.appendChild(columnsDiv);
+
+    taskList.appendChild(groupDiv);
+  });
 }
 
-function deleteTaskFromStorage(text, date) {
-  let tasks = JSON.parse(localStorage.getItem("tasks")) || [];
-  tasks = tasks.filter(task => !(task.text === text && task.date === date));
-  localStorage.setItem("tasks", JSON.stringify(tasks));
-}
+window.onload = loadTasks;
