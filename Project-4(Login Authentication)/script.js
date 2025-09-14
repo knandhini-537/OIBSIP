@@ -11,20 +11,20 @@ function signup() {
   const password = document.getElementById("signup-password").value.trim();
   const message = document.getElementById("signup-message");
   if (!username || !password) {
-    message.textContent = "❌ Please fill all fields!";
+    message.textContent = "Please fill all fields!";
     message.className = "error";
     return;
   }
 
   let users = getUsers();
   if (users.find(user => user.username === username)) {
-    message.textContent = "❌ Username already exists!";
+    message.textContent = "Username already exists!";
     message.className = "error";
     return;
   }
   users.push({ username, password });
   saveUsers(users);
-  message.textContent = "✅ Account created successfully! Redirecting...";
+  message.textContent = "Account created successfully! Redirecting...";
   message.className = "success";
 
   setTimeout(() => {
@@ -36,7 +36,7 @@ function login() {
   const password = document.getElementById("login-password").value.trim();
   const message = document.getElementById("login-message");
   if (!username || !password) {
-    message.textContent = "❌ Please fill all fields!";
+    message.textContent = "Please fill all fields!";
     message.className = "error";
     return;
   }
@@ -45,14 +45,14 @@ function login() {
 
   if (user) {
     sessionStorage.setItem("loggedInUser", username);
-    message.textContent = "✅ Login successful! Redirecting...";
+    message.textContent = "Login successful! Redirecting...";
     message.className = "success";
 
     setTimeout(() => {
       window.location.href = "welcome.html";
     }, 1200);
   } else {
-    message.textContent = "❌ Invalid username or password!";
+    message.textContent = "Invalid username or password!";
     message.className = "error";
   }
 }
