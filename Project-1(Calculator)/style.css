@@ -8,10 +8,7 @@ body {
     background-color:rgb(90, 147, 165);
     margin: 0;
 }
-.billgates{
-    font-family: "Bree-serif";
-    font-style: italic;
-}
+
 .calculator {
     width: calc(100%-4px);
     max-width: 420px;
